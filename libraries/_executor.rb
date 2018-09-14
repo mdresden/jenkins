@@ -86,6 +86,11 @@ module Jenkins
         cmd.run_command
         cmd.error!
         cmd.stdout.strip
+      rescue e
+        Chef.Log.debug(e.class)
+        puts e.class
+        Chef.Log.debug(e.methods)
+        puts e.methods
       rescue Mixlib::ShellOut::ShellCommandFailed
         exitstatus = cmd.exitstatus
         stderr = cmd.stderr
@@ -106,11 +111,8 @@ module Jenkins
         elsif (exitstatus == 255) && (stderr =~ /^"--username" is not a valid option/)
           command.reject! { |c| c =~ /--username|--password/ }
           retry
-        elsif exitstatus == 143
-          Chef.Log.debug(stderr)
-        else
-          raise
         end
+        raise
       end
     end
 
