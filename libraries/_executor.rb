@@ -87,6 +87,8 @@ module Jenkins
         cmd.error!
         cmd.stdout.strip
       rescue e
+        Chef.Log.debug(e)
+        puts e
         Chef.Log.debug(e.class)
         puts e.class
         Chef.Log.debug(e.methods)
