@@ -108,8 +108,9 @@ module Jenkins
           retry
         elsif exitstatus == 143
           Chef.Log.debug(stderr)
+        else
+          raise
         end
-        raise
       end
     end
 
