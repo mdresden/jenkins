@@ -106,6 +106,8 @@ module Jenkins
         elsif (exitstatus == 255) && (stderr =~ /^"--username" is not a valid option/)
           command.reject! { |c| c =~ /--username|--password/ }
           retry
+        elsif exitstatus == 143
+          Chef.Log.debug(stderr)
         end
         raise
       end
