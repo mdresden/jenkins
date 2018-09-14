@@ -86,13 +86,14 @@ module Jenkins
         cmd.run_command
         cmd.error!
         cmd.stdout.strip
-      rescue e
-        Chef.Log.debug(e)
-        puts e
-        Chef.Log.debug(e.class)
-        puts e.class
-        Chef.Log.debug(e.methods)
-        puts e.methods
+      rescue => exception
+        Chef.Log.debug(exception)
+        puts exception
+        Chef.Log.debug(exception.class)
+        puts exception.class
+        Chef.Log.debug(exception.methods)
+        puts exception.methods
+        raise
       rescue Mixlib::ShellOut::ShellCommandFailed
         exitstatus = cmd.exitstatus
         stderr = cmd.stderr
