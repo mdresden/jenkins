@@ -87,11 +87,9 @@ module Jenkins
         cmd.error!
         cmd.stdout.strip
       rescue => exception
-        Chef.Log.debug(exception)
+        puts 'mdresden'
         puts exception
-        Chef.Log.debug(exception.class)
         puts exception.class
-        Chef.Log.debug(exception.methods)
         puts exception.methods
         raise
       rescue Mixlib::ShellOut::ShellCommandFailed
