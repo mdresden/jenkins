@@ -106,6 +106,8 @@ module Jenkins
         elsif (exitstatus == 255) && (stderr =~ /^"--username" is not a valid option/)
           command.reject! { |c| c =~ /--username|--password/ }
           retry
+        elsif (exitstatus == 2) && (stderr =~ /^java\.lang\.NullPointerException: Cannot get property.+on null object/)
+          retry
         end
         raise
       end

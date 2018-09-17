@@ -51,6 +51,9 @@ class Chef
     attribute :wait_for_completion,
               kind_of: [TrueClass, FalseClass],
               default: true
+    attribute :timeout,
+              kind_of: Integer,
+              default: 60
 
     attr_writer :enabled, :exists
 
@@ -157,7 +160,12 @@ EOH
 
             EOH
 
-            executor.execute!(*command_args, live_stream: stdout_stream)
+            if new_resource.timeout
+              executor.execute!(*command_args, { live_stream: stdout_stream, timeout: new_resource.timeout })
+            else
+              executor.execute!(*command_args, live_stream: stdout_stream)
+            end
+
 
             stdout_stream.print <<-EOH
 
