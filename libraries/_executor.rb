@@ -52,7 +52,7 @@ module Jenkins
       @options = {
         cli:     '/usr/share/jenkins/cli/java/cli.jar',
         java:    'java',
-        timeout: 60,
+        timeout:  60
       }.merge(options)
     end
 
@@ -82,7 +82,11 @@ module Jenkins
       command << %(--password "#{options[:password]}")   if options[:password]
 
       begin
-        cmd = Mixlib::ShellOut.new(command.join(' '), command_options.merge(timeout: options[:timeout]))
+        if command_options[:timeout]
+          cmd = Mixlib::ShellOut.new(command.join(' '), command_options)
+        else
+          cmd = Mixlib::ShellOut.new(command.join(' '), command_options.merge(timeout: options[:timeout]))
+        end
         cmd.run_command
         cmd.error!
         cmd.stdout.strip
