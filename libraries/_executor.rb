@@ -20,6 +20,7 @@
 #
 
 require 'mixlib/shellout'
+require 'open4'
 require 'shellwords'
 require 'tempfile'
 require 'uri'
@@ -82,39 +83,44 @@ module Jenkins
       command << %(--password "#{options[:password]}")   if options[:password]
 
       begin
-        cmd = Mixlib::ShellOut.new(command.join(' '), command_options.merge(timeout: options[:timeout]))
-        cmd.run_command
-        cmd.error!
-        cmd.stdout.strip
-      rescue => exception
-        puts 'mdresden'
-        puts exception
-        puts exception.class
-        puts exception.methods
-        raise
-      rescue Mixlib::ShellOut::ShellCommandFailed
-        exitstatus = cmd.exitstatus
-        stderr = cmd.stderr
-        # We'll fall back to executing the command without authentication if the
-        # command fails very specific ways. These are signs that:
-        #
-        #   * The provided private key is unknown to the Jenkins master
-        #   * Authentication is disabled on the Jenkins master
-        #
-        # These types of exceptions are commonly thrown the first time a Chef run
-        # enables authentication on the Jenkins master. This should also fix some
-        # cases of JENKINS-22346.
-        if ((exitstatus == 255) && (stderr =~ /.*?Authentication failed\. No private key accepted\.$/)) ||
-           ((exitstatus == 255) && (stderr =~ /^java\.io\.EOFException/)) ||
-           ((exitstatus == 1) && (stderr =~ /^Exception in thread "main" java\.io\.EOFException/))
-          command.reject! { |c| c =~ /^-i / }
-          retry
-        elsif (exitstatus == 255) && (stderr =~ /^"--username" is not a valid option/)
-          command.reject! { |c| c =~ /--username|--password/ }
-          retry
+        cmd = command.join(' '), command_options.merge(timeout: options[:timeout])
+        Open4::popen4(cmd) do |pid, stdin, stdout, stderr|
+          stdin.close
+          stderr = stderr
+          _ignored, status = Process::waitpid2 pid
+          exitstatus = status.exitstatus
+          puts "ExitStatus = #{exitstatus}"
+          puts stdout.read.strip
         end
-        raise
-      end
+        #cmd = Mixlib::ShellOut.new(command.join(' '), command_options.merge(timeout: options[:timeout]))
+        #cmd.run_command
+        #cmd.error!
+        #cmd.stdout.strip
+      rescue => exception
+        puts stderr
+        puts exception.backtrace
+      #  exitstatus = cmd.exitstatus
+      #  stderr = cmd.stderr
+      #  # We'll fall back to executing the command without authentication if the
+      #  # command fails very specific ways. These are signs that:
+      #  #
+      #  #   * The provided private key is unknown to the Jenkins master
+      #  #   * Authentication is disabled on the Jenkins master
+      #  #
+      #  # These types of exceptions are commonly thrown the first time a Chef run
+      #  # enables authentication on the Jenkins master. This should also fix some
+      #  # cases of JENKINS-22346.
+      #  if ((exitstatus == 255) && (stderr =~ /.*?Authentication failed\. No private key accepted\.$/)) ||
+      #     ((exitstatus == 255) && (stderr =~ /^java\.io\.EOFException/)) ||
+      #     ((exitstatus == 1) && (stderr =~ /^Exception in thread "main" java\.io\.EOFException/))
+      #    command.reject! { |c| c =~ /^-i / }
+      #    retry
+      #  elsif (exitstatus == 255) && (stderr =~ /^"--username" is not a valid option/)
+      #    command.reject! { |c| c =~ /--username|--password/ }
+      #    retry
+      #  end
+      raise
+      #end
     end
 
     #
